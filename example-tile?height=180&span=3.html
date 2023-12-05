@@ -23,6 +23,10 @@
     p {
       font-size: 14px;
     }
+    html * {
+      /* Prevent Text size adjustments in Safari on Screen rotation*/
+      -webkit-text-size-adjust: none; /* Never autoresize text */
+    }
     </style>
     <script>
         <!-- Receives json messages from IoX Client -->
