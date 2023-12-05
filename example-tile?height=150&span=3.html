@@ -120,7 +120,9 @@
 
     </head>
     <body>
-    <p id="nodeName"> </p>
+    <div class="namecontainer">
+        <p id="nodeName"> </p>
+    </div>
     <div class="slidecontainer">
       <p id="statuslabel"> </p>
       <input id="mySlider" type="range" min="1" max="100" value="50" onchange="sendCommand('', 'DON', [{'pId': '', 'value': this.value, 'uom': '51'}])">
