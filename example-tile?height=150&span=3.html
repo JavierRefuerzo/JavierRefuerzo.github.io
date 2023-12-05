@@ -38,6 +38,12 @@
                 setObservedAddresses(getObservedAddresses);
                 return;
             }
+            <!-- nodeUpdate -->
+            let nodeUpdate = json["nodeUpdate"];
+            if (nodeUpdate != undefined){
+                updateNode(nodeUpdate);
+                return;
+            }
             console.log('could not match newMessage Type');
         }
 
@@ -92,6 +98,15 @@
             }
         }
 
+        <!-- Process Node Update. For multiple nodes switch(address) -->
+        function updateNode(json){
+            let address = json["address"];
+            let name = json["name"];
+            let enabled = json["enabled"];
+            var myelement = document.getElementById("nodeName");
+            myelement.innerHTML = name;
+        }
+
         <!-- Process Observed Addresses Request -->
         function setObservedAddresses(json){
             <!-- This is the Address of the node attached by the client. There is no need to request observation of this address as the Client will automatically observe if not null.  If other addresses are to be observed they are requested here -->
@@ -105,15 +120,16 @@
 
     </head>
     <body>
-    <div class="onlevelcontainer">
-        <p id="onLevelLabel">""</p>
-    </div>
+    <p id="nodeName"> </p>
     <div class="slidecontainer">
-      <p id="statuslabel">""</p>
+      <p id="statuslabel"> </p>
       <input id="mySlider" type="range" min="1" max="100" value="50" onchange="sendCommand('', 'DON', [{'pId': '', 'value': this.value, 'uom': '51'}])">
     </div>
     <div class="buttoncontainer">
       <button type="submit" class="style" onclick="sendCommand('', 'DOF', [])"><i>Off</i></button>
+    </div>
+    <div class="onlevelcontainer">
+        <p id="onLevelLabel"> </p>
     </div>
 
     </body>
