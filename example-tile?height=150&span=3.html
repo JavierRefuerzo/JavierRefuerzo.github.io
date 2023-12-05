@@ -96,10 +96,6 @@
                 var statuslabel = document.getElementById("statuslabel");
                 statuslabel.innerHTML = "Current Status: " + formatted;
                 break;
-            case "OL":
-                var myelement = document.getElementById("onLevelLabel");
-                myelement.innerHTML = "On Level: " + formatted;
-                break;
             default:
                 break;
             }
@@ -136,9 +132,6 @@
     </div>
     <div class="buttoncontainer">
       <button type="submit" class="style" onclick="sendCommand('', 'DOF', [])"><i>Off</i></button>
-    </div>
-    <div class="onlevelcontainer">
-        <p id="onLevelLabel">-</p>
     </div>
 
     </body>
