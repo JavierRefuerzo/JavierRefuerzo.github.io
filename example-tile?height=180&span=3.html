@@ -135,12 +135,18 @@
             var slider = document.getElementById("mySlider");
             <!-- slider.addEventListener("touchstart", process_touchend, false) -->
             <!-- slider.addEventListener("touchmove", process_touchend, false) -->
-            slider.addEventListener("touchcancel", process_touchend, false)
+            slider.addEventListener("touchcancel", process_touchCancel, false)
             slider.addEventListener("touchend", process_touchend, false) 
         }
 
         function process_touchend(ev) {
             console.log('process_touchend');
+             var slider = document.getElementById("mySlider");
+            sendCommand('', 'DON', [{'pId': '', 'value': slider.value, 'uom': '51'}])
+        }
+
+         function process_touchCancel(ev) {
+            console.log('process_touchCancel');
              var slider = document.getElementById("mySlider");
             sendCommand('', 'DON', [{'pId': '', 'value': slider.value, 'uom': '51'}])
         }
