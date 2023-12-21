@@ -125,16 +125,19 @@
         
         <!-- Listens for document load fiinished -->
         document.addEventListener("DOMContentLoaded", function () {
+            console.log('DOMcontentLoaded');
               addTouchListener()
         });
 
          <!-- Touch Listener -->
          function addTouchListener(){
+             console.log('addTouchListener');
             var slider = document.getElementById("mySlider");
             slider.addEventListener("touchend", process_touchend, false)
         }
 
         function process_touchend(ev) {
+            console.log('process_touchend');
              var slider = document.getElementById("mySlider");
             sendCommand('', 'DON', [{'pId': '', 'value': slider.value, 'uom': '51'}])
         }
