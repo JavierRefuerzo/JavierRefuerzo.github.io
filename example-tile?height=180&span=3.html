@@ -122,18 +122,21 @@
             let jsonString = JSON.stringify(obj);
             publishMessage(jsonString);
         }
-
+        
+        <!-- Listens for document load fiinished -->
         document.addEventListener("DOMContentLoaded", function () {
-              console.log('finished loading');
+              addTouchListener()
         });
 
          <!-- Touch Listener -->
-         function addTouchListener(json){
-            <!-- This is the Address of the node attached by the client. There is no need to request observation of this address as the Client will automatically observe if not null.  If other addresses are to be observed they are requested here -->
-            let address = json["address"];
-            let obj = {"setObservedAddresses": []};
-            let jsonString = JSON.stringify(obj);
-            publishMessage(jsonString);
+         function addTouchListener(){
+            var slider = document.getElementById("mySlider");
+            slider.addEventListener("touchend", process_touchend, false)
+        }
+
+        function process_touchend(ev) {
+             var slider = document.getElementById("mySlider");
+            sendCommand('', 'DON', [{'pId': '', 'value': slider.value, 'uom': '51'}])
         }
 
     </script>
