@@ -133,7 +133,10 @@
          function addTouchListener(){
              console.log('addTouchListener');
             var slider = document.getElementById("mySlider");
-            slider.addEventListener("touchend", process_touchend, false)
+            slider.addEventListener("touchstart", process_touchend, false)
+            slider.addEventListener("touchmove", process_touchend, false)
+            slider.addEventListener("touchcancel", process_touchend, false)
+            slider.addEventListener("touchend", process_touchend, false) 
         }
 
         function process_touchend(ev) {
