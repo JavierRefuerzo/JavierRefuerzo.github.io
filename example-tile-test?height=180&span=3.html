@@ -122,6 +122,36 @@
             let jsonString = JSON.stringify(obj);
             publishMessage(jsonString);
         }
+        
+        <!-- Listens for document load fiinished -->
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log('DOMcontentLoaded');
+              addTouchListener()
+        });
+
+         <!-- Touch Listener -->
+         function addTouchListener(){
+             console.log('addTouchListener');
+            var slider = document.getElementById("mySlider");
+            <!-- slider.addEventListener("touchstart", process_touchend, false) -->
+            <!-- slider.addEventListener("touchmove", process_touchend, false) -->
+            <!-- slider.addEventListener("touchcancel", process_touchCancel, false) -->
+            <!-- slider.addEventListener("touchend", process_touchend, false) -->
+            slider.addEventListener("input", process_touchend, false)
+            <!-- slider.addEventListener("change", process_touchend, false) -->
+        }
+
+        function process_touchend(ev) {
+            console.log('process_touchend');
+             var slider = document.getElementById("mySlider");
+            sendCommand('', 'DON', [{'pId': '', 'value': slider.value, 'uom': '51'}])
+        }
+
+         function process_touchCancel(ev) {
+            console.log('process_touchCancel');
+             var slider = document.getElementById("mySlider");
+            sendCommand('', 'DON', [{'pId': '', 'value': slider.value, 'uom': '51'}])
+        }
 
     </script>
 
@@ -132,7 +162,7 @@
     </div>
     <div class="slidecontainer">
       <p id="statuslabel">-</p>
-      <input id="mySlider" type="range" min="1" max="100" value="0" onchange="sendCommand('', 'DON', [{'pId': '', 'value': this.value, 'uom': '51'}])">
+      <input id="mySlider" type="range" min="1" max="100" value="0" touchend="sendCommand('', 'DON', [{'pId': '', 'value': this.value, 'uom': '51'}])">
     </div>
     <div class="buttoncontainer">
       <button type="submit" class="style" onclick="sendCommand('', 'DOF', [])"><i>Off</i></button>
