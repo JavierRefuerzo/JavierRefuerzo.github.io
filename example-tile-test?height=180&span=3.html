@@ -29,23 +29,23 @@
     }
     </style>
     <script>
-        <!-- Receives json messages from IoX Client -->
+        //<!-- Receives json messages from IoX Client -->
         function newMessage(jsonString) {
             console.log('newMessage received');
             let json = JSON.parse(jsonString);
-            <!-- statusUpdate-->
+            //<!-- statusUpdate-->
             let statusUpdate = json["statusUpdate"];
             if (statusUpdate != undefined) {
                 updateStatus(statusUpdate);
                 return;
             }
-            <!-- getObservedAddresses -->
+            //<!-- getObservedAddresses -->
             let getObservedAddresses = json["getObservedAddresses"];
             if (getObservedAddresses != undefined){
                 setObservedAddresses(getObservedAddresses);
                 return;
             }
-            <!-- nodeUpdate -->
+            //<!-- nodeUpdate -->
             let nodeUpdate = json["nodeUpdate"];
             if (nodeUpdate != undefined){
                 updateNode(nodeUpdate);
@@ -54,35 +54,35 @@
             console.log('could not match newMessage Type');
         }
 
-        <!-- Sends json message to IoX client -->
+        //<!-- Sends json message to IoX client -->
         function publishMessage(jsonString) {
               console.log('publishMessage');
               try {
-                  <!-- iOS -->
+                  //<!-- iOS -->
                   if (window.webkit != undefined) {
                       webkit.messageHandlers.postToUdm.postMessage(jsonString);
                   }
-                  <!-- Android -->
+                  //<!-- Android -->
                   if (window.androidInterface != undefined) {
                       androidInterface.postToUdm(jsonString);
                   }
-                  <!-- TODO Add other Clients such as browser -->
+                  //<!-- TODO Add other Clients such as browser -->
               } catch(err) {
                   console.log('error');
               }
         }
 
-        <!-- Send command to IoX -->
+        //<!-- Send command to IoX -->
         function sendCommand(address, cmd, params) {
               console.log('sendCommand called');
               let obj = {"sendCommand": {"address": address , "cmd": cmd, "p": params }};
-              <!-- Multiple Params would be let obj = {"address": "ZB25235_001_1" , "cmd": "DON", "p": [{'pId': '', 'value': this.value, 'uom': '51'}, {'pId': 'OL', 'value': '100', 'uom': '51'}] }; -->
+              //<!-- Multiple Params would be let obj = {"address": "ZB25235_001_1" , "cmd": "DON", "p": [{'pId': '', 'value': this.value, 'uom': '51'}, {'pId': 'OL', 'value': '100', 'uom': '51'}] }; -->
               let jsonString = JSON.stringify(obj);
               publishMessage(jsonString);
         }
 
 
-        <!-- Process Status Update. For multiple nodes switch(address) -->
+        //<!-- Process Status Update. For multiple nodes switch(address) -->
         function updateStatus(json){
             let address = json["address"];
             let status = json["status_id"];
@@ -105,7 +105,7 @@
             }
         }
 
-        <!-- Process Node Update. For multiple nodes switch(address) -->
+        //<!-- Process Node Update. For multiple nodes switch(address) -->
         function updateNode(json){
             let address = json["address"];
             let name = json["name"];
@@ -114,31 +114,31 @@
             myelement.innerHTML = name;
         }
 
-        <!-- Process Observed Addresses Request -->
+        //<!-- Process Observed Addresses Request -->
         function setObservedAddresses(json){
-            <!-- This is the Address of the node attached by the client. There is no need to request observation of this address as the Client will automatically observe if not null.  If other addresses are to be observed they are requested here -->
+            //<!-- This is the Address of the node attached by the client. There is no need to request observation of this address as the Client will automatically observe if not null.  If other addresses are to be observed they are requested here -->
             let address = json["address"];
             let obj = {"setObservedAddresses": []};
             let jsonString = JSON.stringify(obj);
             publishMessage(jsonString);
         }
         
-        <!-- Listens for document load fiinished -->
+        //<!-- Listens for document load fiinished -->
         document.addEventListener("DOMContentLoaded", function () {
             console.log('DOMcontentLoaded');
               addTouchListener()
         });
 
-         <!-- Touch Listener -->
+         //<!-- Touch Listener -->
          function addTouchListener(){
              console.log('addTouchListener');
             var slider = document.getElementById("mySlider");
-            <!-- slider.addEventListener("touchstart", process_touchend, false) -->
-            <!-- slider.addEventListener("touchmove", process_touchend, false) -->
-            <!-- slider.addEventListener("touchcancel", process_touchCancel, false) -->
-            <!-- slider.addEventListener("touchend", process_touchend, false) -->
+            //<!-- slider.addEventListener("touchstart", process_touchend, false) -->
+            //<!-- slider.addEventListener("touchmove", process_touchend, false) -->
+            //<!-- slider.addEventListener("touchcancel", process_touchCancel, false) -->
+            //<!-- slider.addEventListener("touchend", process_touchend, false) -->
             slider.addEventListener("input", process_touchend, false)
-            <!-- slider.addEventListener("change", process_touchend, false) -->
+            //<!-- slider.addEventListener("change", process_touchend, false) -->
         }
 
         function process_touchend(ev) {
