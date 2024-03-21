@@ -52,7 +52,7 @@
 
             // If the event origin is not the parent, then something's wrong
             if (parentOrigin && parentOrigin !== event.origin) {
-                log('WARNING: event origin is not the parent.')
+                log('WARNING: event origin is not the parent.' + event.origin + ",")
             }
 
             var msg = JSON.parse(event.data)
