@@ -72,7 +72,7 @@
                 log('WARNING: event origin is not the parent. Event: ' + event.origin + ", Parent: " + parentOrigin)
             }
 
-            if (event.data == "capturePort" && event.ports[0] != undefined){
+            if (event.data == "capturePort"){
                 log('Capture Port Set.')
                 nativeJsPortTwo = event.ports[0];
                 return
