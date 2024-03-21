@@ -50,6 +50,9 @@
         window.addEventListener('message', function (event) {
             log('newMessage received: ' + event.data);
 
+            if (event.origin == undefined){
+                log('event origin: is undefined');
+            }
             // If the event origin is not the parent, then something's wrong
             if (parentOrigin && parentOrigin !== event.origin) {
                 log('WARNING: event origin is not the parent.' + event.origin + ",")
