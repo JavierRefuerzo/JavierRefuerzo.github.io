@@ -30,7 +30,7 @@
     </style>
     <script>
         var parentOrigin = new URLSearchParams(window.location.search).get('parent')
-
+        console.log('PARENT: ' + parentOrigin)
         if (!parentOrigin) {
             console.log('WARNING: parent not set on the query string.')
         }
