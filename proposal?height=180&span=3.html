@@ -40,6 +40,20 @@
             console.log('MyTile -', data)
         }
 
+        const channel = new MessageChannel();
+        var nativeJsPortOne = channel.port1;
+        var nativeJsPortTwo = channel.port2;
+        nativeJsPortOne.addEventListener('message', function(event) {
+          alert(event.data);
+        }, false);
+    
+        nativeJsPortTwo.addEventListener('message', function(event) {
+          alert(event.data);
+        }, false);
+        nativeJsPortOne.start();
+        nativeJsPortTwo.start();
+
+
         // Messages can have one or several of these keys. The content will be routed to these handler functions
         var messageHandlers = {
             nodeUpdate: nodeUpdate,
@@ -56,6 +70,11 @@
             // If the event origin is not the parent, then something's wrong
             if (parentOrigin && parentOrigin !== event.origin) {
                 log('WARNING: event origin is not the parent. Event: ' + event.origin + ", Parent: " + parentOrigin)
+            }
+
+            if (event.data == "capturePort" && event.ports[0] != undefined){
+                nativeJsPortTwo = event.ports[0];
+                return
             }
 
             var msg = JSON.parse(event.data)
@@ -91,6 +110,7 @@
                 if (window.androidInterface != undefined) {
                     androidInterface.postToUdm(jsonString);
                 }
+                nativeJsPortOne.postMessage(jsonString);
                 if (window.parent != undefined){
                     window.parent.postMessage(jsonString, parentOrigin)
                 }
