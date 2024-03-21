@@ -43,11 +43,11 @@
         const channel = new MessageChannel();
         var nativeJsPortOne = channel.port1;
         var nativeJsPortTwo = channel.port2;
-        nativeJsPortOne.addEventListener('message', function(event) {
+        nativeJsPortOne.addEventListener('message', 'Port 1: ' + function(event) {
           alert(event.data);
         }, false);
     
-        nativeJsPortTwo.addEventListener('message', function(event) {
+        nativeJsPortTwo.addEventListener('message', 'Port 1: ' + function(event) {
           alert(event.data);
         }, false);
         nativeJsPortOne.start();
