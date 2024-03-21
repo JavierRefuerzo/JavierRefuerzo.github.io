@@ -91,8 +91,9 @@
                 if (window.androidInterface != undefined) {
                     androidInterface.postToUdm(jsonString);
                 }
-
-                window.parent.postMessage(jsonString, parentOrigin)
+                if (window.parent != undefined){
+                    window.parent.postMessage(jsonString, parentOrigin)
+                }
             } catch(err) {
                 log(err.message);
             }
