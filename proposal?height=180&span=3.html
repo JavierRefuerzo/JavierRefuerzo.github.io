@@ -73,6 +73,7 @@
             }
 
             if (event.data == "capturePort" && event.ports[0] != undefined){
+                log('Capture Port Set.')
                 nativeJsPortTwo = event.ports[0];
                 return
             }
