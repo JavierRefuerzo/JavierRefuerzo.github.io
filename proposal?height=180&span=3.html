@@ -45,13 +45,6 @@
         const channel = new MessageChannel();
         var nativeJsPortOne = channel.port1;
         var nativeJsPortTwo = channel.port2;
-        // nativeJsPortOne.addEventListener('message', function(event) {
-        //   alert('Port 1: ' + event.data);
-        // }, false);
-    
-        // nativeJsPortTwo.addEventListener('message', function(event) {
-        //   alert('Port 2: ' + event.data);
-        // }, false);
         nativeJsPortOne.start();
         nativeJsPortTwo.start();
         
