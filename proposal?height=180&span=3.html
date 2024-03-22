@@ -32,6 +32,7 @@
         var parentOrigin = new URLSearchParams(window.location.search).get('parent')
         console.log('PARENT: ' + parentOrigin)
         if (!parentOrigin) {
+            //This will be triggered by Android and iOS as there is no parent
             console.log('WARNING: parent not set on the query string.')
         }
 
@@ -61,6 +62,8 @@
             log('newMessage received: ' + event.data);
 
             if (!event.origin){
+                //just a test to show us the event.origin is undefined on Android iOS
+                //however parentOrigin is also undefined so the next WARNING is not trigge4red
                 log('event origin: is undefined');
             }
             // If the event origin is not the parent, then something's wrong
