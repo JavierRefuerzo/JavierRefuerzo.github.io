@@ -74,6 +74,7 @@
 
             if (event.data == "capturePort"){
                log('Capture Port Set.')
+               nativeJsPortOne = events.port[0]
                nativeJsPortTwo = event.ports[1];
                return
             }
