@@ -43,12 +43,12 @@
         const channel = new MessageChannel();
         var nativeJsPortOne = channel.port1;
         var nativeJsPortTwo = channel.port2;
-        nativeJsPortOne.addEventListener('message', 'Port 1: ' + function(event) {
-          alert(event.data);
+        nativeJsPortOne.addEventListener('message', function(event) {
+          alert('Port 1: ' + event.data);
         }, false);
     
-        nativeJsPortTwo.addEventListener('message', 'Port 1: ' + function(event) {
-          alert(event.data);
+        nativeJsPortTwo.addEventListener('message', function(event) {
+          alert('Port 2: ' + event.data);
         }, false);
         nativeJsPortOne.start();
         nativeJsPortTwo.start();
@@ -72,11 +72,11 @@
                 log('WARNING: event origin is not the parent. Event: ' + event.origin + ", Parent: " + parentOrigin)
             }
 
-            //if (event.data == "capturePort"){
-            //    log('Capture Port Set.')
-            //    nativeJsPortTwo = event.ports[0];
-            //    return
-            //}
+            if (event.data == "capturePort"){
+               log('Capture Port Set.')
+               nativeJsPortTwo = event.ports[0];
+               return
+            }
 
             var msg = JSON.parse(event.data)
 
