@@ -96,8 +96,8 @@
             })
 
             // Test accessing parent document. This has to fail.
-            // const nElements = window.parent && window.parent.document && window.parent.document.all && window.parent.document.all.length
-            // console.log(`window.parent access: ${nElements}`)
+            const nElements = window.parent && window.parent.document && window.parent.document.all && window.parent.document.all.length
+            console.log(`window.parent access: ${nElements}`)
         });
 
 
