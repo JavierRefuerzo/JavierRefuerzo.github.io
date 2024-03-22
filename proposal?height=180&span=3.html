@@ -73,9 +73,13 @@
             }
 
             if (event.data == "capturePort"){
-               log('Capture Port Set.')
-               nativeJsPortOne = event.ports[0]
-               nativeJsPortTwo = event.ports[1];
+               log('Message Capture Port')
+                if (event.ports[0] != null) {
+                    log('Set Capture Port')
+                    nativeJsPortTwo = event.ports[0]
+                    return
+                }
+               log('Could not set Capture Port')
                return
             }
 
