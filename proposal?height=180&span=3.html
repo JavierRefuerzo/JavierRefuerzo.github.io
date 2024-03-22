@@ -113,15 +113,8 @@
                 if (window.webkit != undefined) {
                     webkit.messageHandlers.postToUdm.postMessage(jsonString);
                 }
-                //<!-- Android -->
-                //if (window.androidInterface != undefined) {
-                //    androidInterface.postToUdm(jsonString);
-                //}
                 nativeJsPortOne.postMessage(jsonString);
-                //nativeJsPortTwo.postMessage(jsonString);
-                if (window.parent != undefined){
-                    window.parent.postMessage(jsonString, parentOrigin)
-                }
+                window.parent.postMessage(jsonString, parentOrigin)
             } catch(err) {
                 log(err.message);
             }
