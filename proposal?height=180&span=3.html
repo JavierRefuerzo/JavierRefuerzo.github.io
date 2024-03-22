@@ -40,7 +40,7 @@
             console.log('MyTile -', data)
         }
 
-        //MessageChannel is uesed to communicate with Android (safer than javaScript) 
+        //MessageChannel is uesed to communicate with Android and removes the need for the Android JavaScript Interface
         //This is used to both postMessage and communicate with Native Android
         const channel = new MessageChannel();
         var nativeJsPortOne = channel.port1;
