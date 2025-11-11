@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Interactive Video with Multiple Questions</title>
+  <style>
+    #questionBox {
+      display: none;
+      position: absolute;
+      top: 20%;
+      left: 30%;
+      background: white;
+      padding: 20px;
+      border: 2px solid #333;
+      font-family: Arial, sans-serif;
+      z-index: 999;
+      width: 300px;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 15px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <video id="myVideo" width="640" controls>
+    <source src="https://universaldevices-my.sharepoint.com/:v:/g/personal/javier_universal-devices_com/IQDTHNfo6ZWTTbJvj0XnuuhdAboyGKRiuJ3kg6LLno8YYsI?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=O5ITAY" type="video/mp4">
+    Your browser does not support HTML5 video.
+  </video>
+
+  <div id="questionBox">
+    <p id="questionText"></p>
+    <button onclick="answer(true)">Correct</button>
+    <button onclick="answer(false)">Incorrect</button>
+  </div>
+
+  <script>
+    const video = document.getElementById('myVideo');
+    const questionBox = document.getElementById('questionBox');
+    const questionText = document.getElementById('questionText');
+
+    // Define questions and branching logic
+    const questions = [
+      { time: 10, text: "Question 1: Is this the correct setup?", correctJump: 12, wrongJump: 8 },
+      { time: 25, text: "Question 2: Did you connect the cable properly?", correctJump: 27, wrongJump: 20 },
+      { time: 40, text: "Question 3: Is the device powered on?", correctJump: 42, wrongJump: 35 }
+    ];
+
+    let currentQuestionIndex = 0;
+
+    video.addEventListener('timeupdate', function() {
+      if (currentQuestionIndex < questions.length && video.currentTime >= questions[currentQuestionIndex].time && !video.paused) {
+        video.pause();
+        questionText.textContent = questions[currentQuestionIndex].text;
+        questionBox.style.display = 'block';
+      }
+    });
+
+    function answer(isCorrect) {
+      const q = questions[currentQuestionIndex];
+      questionBox.style.display = 'none';
+      video.currentTime = isCorrect ? q.correctJump : q.wrongJump;
+      video.play();
+      currentQuestionIndex++;
+    }
+  </script>
+</body>
+</html>
