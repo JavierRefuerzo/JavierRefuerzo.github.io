@@ -1,68 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Interactive Video with Multiple Questions</title>
-  <style>
-    #questionBox {
-      display: none;
-      position: absolute;
-      top: 20%;
-      left: 30%;
-      background: white;
-      padding: 20px;
-      border: 2px solid #333;
-      font-family: Arial, sans-serif;
-      z-index: 999;
-      width: 300px;
-    }
-    button {
-      margin: 10px;
-      padding: 10px 15px;
-      font-size: 16px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canva Design Embed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        .canva-embed {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 0;
+            padding-top: 100%;
+            box-shadow: 0 2px 8px rgba(63,69,81,0.16);
+            margin: 20px auto;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        .canva-embed iframe {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            border: none;
+        }
+        a {
+            display: inline-block;
+            margin-top: 15px;
+            text-decoration: none;
+            color: #0073e6;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-  <video id="myVideo" width="640" controls>
-    <source src="https://universaldevices-my.sharepoint.com/:v:/g/personal/javier_universal-devices_com/IQDTHNfo6ZWTTbJvj0XnuuhdAboyGKRiuJ3kg6LLno8YYsI?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=O5ITAY" type="video/mp4">
-    Your browser does not support HTML5 video.
-  </video>
-
-  <div id="questionBox">
-    <p id="questionText"></p>
-    <button onclick="answer(true)">Correct</button>
-    <button onclick="answer(false)">Incorrect</button>
-  </div>
-
-  <script>
-    const video = document.getElementById('myVideo');
-    const questionBox = document.getElementById('questionBox');
-    const questionText = document.getElementById('questionText');
-
-    // Define questions and branching logic
-    const questions = [
-      { time: 10, text: "Question 1: Is this the correct setup?", correctJump: 12, wrongJump: 8 },
-      { time: 25, text: "Question 2: Did you connect the cable properly?", correctJump: 27, wrongJump: 20 },
-      { time: 40, text: "Question 3: Is the device powered on?", correctJump: 42, wrongJump: 35 }
-    ];
-
-    let currentQuestionIndex = 0;
-
-    video.addEventListener('timeupdate', function() {
-      if (currentQuestionIndex < questions.length && video.currentTime >= questions[currentQuestionIndex].time && !video.paused) {
-        video.pause();
-        questionText.textContent = questions[currentQuestionIndex].text;
-        questionBox.style.display = 'block';
-      }
-    });
-
-    function answer(isCorrect) {
-      const q = questions[currentQuestionIndex];
-      questionBox.style.display = 'none';
-      video.currentTime = isCorrect ? q.correctJump : q.wrongJump;
-      video.play();
-      currentQuestionIndex++;
-    }
-  </script>
+    <h1>My Canva Design</h1>
+    <div class="canva-embed">
+        <iframe loading="lazy" src="https://www.canva.com/design/DAG4WKQZJo4/0BbZDrqE-osIJKN9qm9xTg/view?embed" allowfullscreen></iframe>
+    </div>
+    <a href="https://www.canva.com/design/DAG4WKQZJo4/0BbZDrqE-osIJKN9qm9xTg/view?utm_content=DAG4WKQZJo4&utm_campaign=designshare&utm_medium=embeds&utm_source=link" target="_blank" rel="noopener">
+        View Design on Canva
+    </a>
+    <p>Design by Javier Refuerzo</p>
 </body>
 </html>
