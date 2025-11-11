@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canva Design Embed</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        text-align: center;
+    }
+    .canva-embed {
+        position: relative;
+        width: 100%;
+        max-width: 1200px; /* Increased width */
+        height: 800px; /* Increased height */
+        box-shadow: 0 2px 8px rgba(63,69,81,0.16);
+        margin: 20px auto;
+        overflow: auto; /* Enables scrolling */
+        border-radius: 8px;
+    }
+    .canva-embed iframe {
+        width: 1200px; /* Match container width */
+        height: 800px; /* Match container height */
+        border: none;
+    }
+    a {
+        display: inline-block;
+        margin-top: 15px;
+        text-decoration: none;
+        color: #0073e6;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+    <h1>My Canva Design</h1>
+    <div class="canva-embed">
+        <iframe loading="lazy"
+            src="https://www.canva.com/design/DAG4WKQZJo4/0BbZDrqE-osIJKN9qm9xTg/view?embed"
+            allowfullscreen="allowfullscreen" allow="fullscreen">
+        </iframe>
+    </div>
+    <a href="https://www.canva.com/design/DAG4WKQZJo4/0BbZDrqE-osIJKN9qm9xTg/view?utm_content=DAG4WKQZJo4&utm_campaign=designshare&utm_medium=embeds&utm_source=link"
+       target="_blank" rel="noopener">View Design on Canva</a>
+    <p>Design by Javier Refuerzo</p>
+</body>
+</html>
