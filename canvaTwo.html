@@ -18,14 +18,20 @@
     margin: 20px auto;
     border: 1px solid #ccc;
     border-radius: 8px;
-    overflow: scroll; /* show scrollbars */
+    overflow: scroll;
     background-color: #fafafa;
     box-shadow: 0 2px 8px rgba(63,69,81,0.16);
+    cursor: grab;
+    position: relative;
+  }
+
+  .svg-wrapper:active {
+    cursor: grabbing;
   }
 
   .svg-inner {
     transform-origin: top left;
-    transition: transform 0.2s ease;
+    transition: transform 0.15s ease;
     display: inline-block;
   }
 
@@ -65,34 +71,88 @@
   </div>
 
   <script>
-    const svgInner = document.getElementById('svgInner');
-    const zoomLevelText = document.getElementById('zoomLevel');
-    const svgWrapper = document.getElementById('svgWrapper');
+    const wrapper = document.getElementById('svgWrapper');
+    const inner = document.getElementById('svgInner');
+    const zoomText = document.getElementById('zoomLevel');
+
     let scale = 1;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let scrollLeft = 0;
+    let scrollTop = 0;
 
     function updateZoom() {
-      svgInner.style.transform = `scale(${scale})`;
-      zoomLevelText.textContent = `${Math.round(scale * 100)}%`;
+      inner.style.transform = `scale(${scale})`;
+      zoomText.textContent = `${Math.round(scale * 100)}%`;
     }
 
+    // Zoom buttons
     document.getElementById('zoomIn').addEventListener('click', () => {
-      scale = Math.min(scale + 0.1, 10); // up to 1000%
-      updateZoom();
+      zoomAtCenter(1.1);
     });
 
     document.getElementById('zoomOut').addEventListener('click', () => {
-      scale = Math.max(scale - 0.1, 0.1); // minimum 10%
-      updateZoom();
+      zoomAtCenter(1/1.1);
     });
 
-    // Mouse wheel zoom
-    svgWrapper.addEventListener('wheel', (e) => {
-      if (e.ctrlKey || e.metaKey) { // zoom only when ctrl or cmd held
+    // Mouse wheel zoom (Ctrl or Cmd key)
+    wrapper.addEventListener('wheel', (e) => {
+      if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        const delta = e.deltaY < 0 ? 0.1 : -0.1;
-        scale = Math.min(Math.max(scale + delta, 0.1), 10);
-        updateZoom();
+        const zoomFactor = e.deltaY < 0 ? 1.1 : 1/1.1;
+        zoomAtMouse(e, zoomFactor);
       }
+    });
+
+    function zoomAtCenter(factor) {
+      const rect = wrapper.getBoundingClientRect();
+      const centerX = rect.width / 2 + wrapper.scrollLeft;
+      const centerY = rect.height / 2 + wrapper.scrollTop;
+      applyZoom(factor, centerX, centerY);
+    }
+
+    function zoomAtMouse(e, factor) {
+      const rect = wrapper.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left + wrapper.scrollLeft;
+      const mouseY = e.clientY - rect.top + wrapper.scrollTop;
+      applyZoom(factor, mouseX, mouseY);
+    }
+
+    function applyZoom(factor, focalX, focalY) {
+      const newScale = Math.min(Math.max(scale * factor, 0.1), 10);
+      const scaleRatio = newScale / scale;
+      scale = newScale;
+
+      // Adjust scroll to keep focal point in same position
+      wrapper.scrollLeft = focalX * scaleRatio - (focalX - wrapper.scrollLeft);
+      wrapper.scrollTop  = focalY * scaleRatio - (focalY - wrapper.scrollTop);
+
+      updateZoom();
+    }
+
+    // Click-and-drag to pan
+    wrapper.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.pageX - wrapper.offsetLeft;
+      startY = e.pageY - wrapper.offsetTop;
+      scrollLeft = wrapper.scrollLeft;
+      scrollTop = wrapper.scrollTop;
+      wrapper.style.cursor = 'grabbing';
+    });
+
+    wrapper.addEventListener('mouseleave', () => { isDragging = false; wrapper.style.cursor = 'grab'; });
+    wrapper.addEventListener('mouseup', () => { isDragging = false; wrapper.style.cursor = 'grab'; });
+
+    wrapper.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+      const x = e.pageX - wrapper.offsetLeft;
+      const y = e.pageY - wrapper.offsetTop;
+      const walkX = (x - startX);
+      const walkY = (y - startY);
+      wrapper.scrollLeft = scrollLeft - walkX;
+      wrapper.scrollTop = scrollTop - walkY;
     });
 
     updateZoom();
