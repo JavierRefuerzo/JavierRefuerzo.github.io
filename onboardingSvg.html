@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Udm Onboarding Flowchart</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 20px;
+    user-select: none;
+    overscroll-behavior: contain;
+  }
+
+  .svg-wrapper {
+    width: 100%;
+    max-width: 1400px;
+    height: 900px;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: scroll;
+    background-color: #fafafa;
+    box-shadow: 0 2px 8px rgba(63,69,81,0.16);
+    cursor: grab;
+    position: relative;
+    touch-action: none; /* allow custom gestures */
+  }
+
+  .svg-wrapper:active {
+    cursor: grabbing;
+  }
+
+  .svg-inner {
+    transform-origin: top left;
+    transition: transform 0.1s ease;
+    display: inline-block;
+  }
+
+  .zoom-controls {
+    margin: 10px 0;
+  }
+
+  .zoom-button {
+    background: #0073e6;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    margin: 0 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .zoom-button:hover {
+    background: #005bb5;
+  }
+</style>
+</head>
+<body>
+  <h1>Udm Onboarding Flowchart</h1>
+
+  <div class="zoom-controls">
+    <button class="zoom-button" id="zoomIn">+</button>
+    <button class="zoom-button" id="zoomOut">−</button>
+    <span id="zoomLevel">100%</span>
+  </div>
+
+  <div class="svg-wrapper" id="svgWrapper">
+    <div class="svg-inner" id="svgInner">
+      <object id="svgObject" data="UdmOnboardingFlowchart.svg" type="image/svg+xml"></object>
+    </div>
+  </div>
+
+  <script>
+    const wrapper = document.getElementById('svgWrapper');
+    const inner = document.getElementById('svgInner');
+    const zoomText = document.getElementById('zoomLevel');
+
+    let scale = 1;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let scrollLeft = 0;
+    let scrollTop = 0;
+
+    // Align to top-right at start
+    window.addEventListener('load', () => {
+      wrapper.scrollLeft = wrapper.scrollWidth;
+      wrapper.scrollTop = 0;
+    });
+
+    function updateZoom() {
+      inner.style.transform = `scale(${scale})`;
+      zoomText.textContent = `${Math.round(scale * 100)}%`;
+    }
+
+    function zoomAt(factor, x, y) {
+      const newScale = Math.min(Math.max(scale * factor, 0.1), 10);
+      const ratio = newScale / scale;
+      scale = newScale;
+
+      wrapper.scrollLeft = x * ratio - (x - wrapper.scrollLeft);
+      wrapper.scrollTop = y * ratio - (y - wrapper.scrollTop);
+      updateZoom();
+    }
+
+    function zoomAtCenter(factor) {
+      const rect = wrapper.getBoundingClientRect();
+      const centerX = rect.width / 2 + wrapper.scrollLeft;
+      const centerY = rect.height / 2 + wrapper.scrollTop;
+      zoomAt(factor, centerX, centerY);
+    }
+
+    document.getElementById('zoomIn').addEventListener('click', () => zoomAtCenter(1.1));
+    document.getElementById('zoomOut').addEventListener('click', () => zoomAtCenter(1 / 1.1));
+
+    // Mouse wheel zoom (Ctrl/Cmd + scroll)
+    wrapper.addEventListener('wheel', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+        const rect = wrapper.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left + wrapper.scrollLeft;
+        const mouseY = e.clientY - rect.top + wrapper.scrollTop;
+        zoomAt(factor, mouseX, mouseY);
+      }
+    });
+
+    // Click & drag to pan
+    wrapper.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.pageX - wrapper.offsetLeft;
+      startY = e.pageY - wrapper.offsetTop;
+      scrollLeft = wrapper.scrollLeft;
+      scrollTop = wrapper.scrollTop;
+      wrapper.style.cursor = 'grabbing';
+    });
+
+    wrapper.addEventListener('mouseleave', () => { isDragging = false; wrapper.style.cursor = 'grab'; });
+    wrapper.addEventListener('mouseup', () => { isDragging = false; wrapper.style.cursor = 'grab'; });
+    wrapper.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+      const x = e.pageX - wrapper.offsetLeft;
+      const y = e.pageY - wrapper.offsetTop;
+      wrapper.scrollLeft = scrollLeft - (x - startX);
+      wrapper.scrollTop = scrollTop - (y - startY);
+    });
+
+    // Touch gestures (pan + pinch-to-zoom)
+    let lastTouchDistance = 0;
+    let lastCenter = null;
+
+    wrapper.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        // single touch pan
+        isDragging = true;
+        startX = e.touches[0].pageX - wrapper.offsetLeft;
+        startY = e.touches[0].pageY - wrapper.offsetTop;
+        scrollLeft = wrapper.scrollLeft;
+        scrollTop = wrapper.scrollTop;
+      } else if (e.touches.length === 2) {
+        // two-finger zoom
+        lastTouchDistance = getTouchDistance(e.touches);
+        lastCenter = getTouchCenter(e.touches);
+      }
+    });
+
+    wrapper.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1 && isDragging) {
+        e.preventDefault();
+        const x = e.touches[0].pageX - wrapper.offsetLeft;
+        const y = e.touches[0].pageY - wrapper.offsetTop;
+        wrapper.scrollLeft = scrollLeft - (x - startX);
+        wrapper.scrollTop = scrollTop - (y - startY);
+      } else if (e.touches.length === 2) {
+        e.preventDefault();
+        const newDistance = getTouchDistance(e.touches);
+        const factor = newDistance / lastTouchDistance;
+        const newCenter = getTouchCenter(e.touches);
+        zoomAt(factor, newCenter.x + wrapper.scrollLeft, newCenter.y + wrapper.scrollTop);
+        lastTouchDistance = newDistance;
+        lastCenter = newCenter;
+      }
+    });
+
+    wrapper.addEventListener('touchend', () => {
+      isDragging = false;
+      lastTouchDistance = 0;
+      lastCenter = null;
+    });
+
+    function getTouchDistance(touches) {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function getTouchCenter(touches) {
+      return {
+        x: (touches[0].clientX + touches[1].clientX) / 2 - wrapper.getBoundingClientRect().left,
+        y: (touches[0].clientY + touches[1].clientY) / 2 - wrapper.getBoundingClientRect().top
+      };
+    }
+
+    updateZoom();
+  </script>
+</body>
+</html>
