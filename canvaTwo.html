@@ -3,108 +3,128 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Canva Design Embed with Zoom</title>
+<title>Zoomable SVG Flow Chart</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-        text-align: center;
-    }
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 20px;
+  }
 
-    .canva-container {
-        position: relative;
-        display: inline-block;
-    }
+  .svg-container {
+    width: 100%;
+    max-width: 1200px;
+    height: 800px;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    background-color: #fafafa;
+    box-shadow: 0 2px 8px rgba(63,69,81,0.16);
+    cursor: grab;
+  }
 
-    .canva-embed {
-        position: relative;
-        width: 100%;
-        max-width: 1200px;
-        height: 800px;
-        box-shadow: 0 2px 8px rgba(63,69,81,0.16);
-        margin: 20px auto;
-        overflow: hidden;
-        border-radius: 8px;
-        transform-origin: 0 0;
-        transition: transform 0.2s ease;
-    }
+  .svg-container:active {
+    cursor: grabbing;
+  }
 
-    .canva-embed iframe {
-        width: 1200px;
-        height: 800px;
-        border: none;
-    }
+  .zoom-controls {
+    margin: 10px 0;
+  }
 
-    .zoom-controls {
-        margin: 10px 0;
-    }
+  .zoom-button {
+    background: #0073e6;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    margin: 0 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+  }
 
-    .zoom-button {
-        background: #0073e6;
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        margin: 0 5px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-    }
-
-    .zoom-button:hover {
-        background: #005bb5;
-    }
-
-    a {
-        display: inline-block;
-        margin-top: 15px;
-        text-decoration: none;
-        color: #0073e6;
-        font-weight: bold;
-    }
+  .zoom-button:hover {
+    background: #005bb5;
+  }
 </style>
 </head>
 <body>
-    <h1>My Canva Design</h1>
+  <h1>Flow Chart Viewer</h1>
 
-    <div class="zoom-controls">
-        <button class="zoom-button" id="zoomIn">+</button>
-        <button class="zoom-button" id="zoomOut">−</button>
-        <span id="zoomLevel">100%</span>
-    </div>
+  <div class="zoom-controls">
+    <button class="zoom-button" id="zoomIn">+</button>
+    <button class="zoom-button" id="zoomOut">−</button>
+    <span id="zoomLevel">100%</span>
+  </div>
 
-    <div class="canva-container">
-        <div class="canva-embed" id="canvaEmbed">
-            <iframe loading="lazy"
-                src="https://www.canva.com/design/DAG4WKQZJo4/0BbZDrqE-osIJKN9qm9xTg/view?embed"
-                allowfullscreen="allowfullscreen" allow="fullscreen">
-            </iframe>
-        </div>
-    </div>
+  <div class="svg-container" id="svgContainer">
+    <!-- Replace 'flowchart.svg' with your SVG file path -->
+    <object id="svgObject" data="UdmOnboardingFlowchart.svg" type="image/svg+xml" width="100%" height="100%"></object>
+  </div>
 
-    <a href="https://www.canva.com/design/DAG4WKQZJo4/0BbZDrqE-osIJKN9qm9xTg/view?utm_content=DAG4WKQZJo4&utm_campaign=designshare&utm_medium=embeds&utm_source=link"
-       target="_blank" rel="noopener">View Design on Canva</a>
+  <script>
+    const container = document.getElementById('svgContainer');
+    const zoomLevelText = document.getElementById('zoomLevel');
+    let scale = 1;
+    let panX = 0;
+    let panY = 0;
+    let isPanning = false;
+    let startX, startY;
 
-    <p>Design by Javier Refuerzo</p>
+    function applyTransform() {
+      const svg = container.querySelector('object').contentDocument?.querySelector('svg');
+      if (svg) {
+        svg.setAttribute('transform', `translate(${panX}, ${panY}) scale(${scale})`);
+      }
+    }
 
-    <script>
-        const embed = document.getElementById('canvaEmbed');
-        const zoomLevel = document.getElementById('zoomLevel');
-        let scale = 1;
+    // Zoom buttons
+    document.getElementById('zoomIn').addEventListener('click', () => {
+      scale = Math.min(scale + 0.1, 3);
+      updateTransform();
+    });
 
-        document.getElementById('zoomIn').addEventListener('click', () => {
-            scale = Math.min(scale + 0.1, 2); // limit zoom in
-            updateZoom();
-        });
+    document.getElementById('zoomOut').addEventListener('click', () => {
+      scale = Math.max(scale - 0.1, 0.3);
+      updateTransform();
+    });
 
-        document.getElementById('zoomOut').addEventListener('click', () => {
-            scale = Math.max(scale - 0.1, 0.5); // limit zoom out
-            updateZoom();
-        });
+    // Mouse wheel zoom
+    container.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.1 : -0.1;
+      scale = Math.min(Math.max(scale + delta, 0.3), 3);
+      updateTransform();
+    });
 
-        function updateZoom() {
-            embed.style.transform = `scale(${scale})`;
-            zoomLevel.textContent = `${Math.round(scale * 100)}%`;
-        }
-    </script>
+    // Pan (drag)
+    container.addEventListener('mousedown', (e) => {
+      isPanning = true;
+      startX = e.clientX - panX;
+      startY = e.clientY - panY;
+    });
+
+    container.addEventListener('mousemove', (e) => {
+      if (!isPanning) return;
+      panX = e.clientX - startX;
+      panY = e.clientY - startY;
+      updateTransform();
+    });
+
+    container.addEventListener('mouseup', () => (isPanning = false));
+    container.addEventListener('mouseleave', () => (isPanning = false));
+
+    function updateTransform() {
+      const svgEl = container.querySelector('object').contentDocument?.querySelector('svg');
+      if (svgEl) {
+        svgEl.setAttribute('transform', `translate(${panX}, ${panY}) scale(${scale})`);
+        zoomLevelText.textContent = `${Math.round(scale * 100)}%`;
+      }
+    }
+
+    // Wait for SVG to load before applying transforms
+    document.getElementById('svgObject').addEventListener('load', updateTransform);
+  </script>
 </body>
 </html>
