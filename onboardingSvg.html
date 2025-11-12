@@ -1,14 +1,15 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Udm Onboarding Flowchart</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Udm Onboarding Flowchart — Zoom & Pan</title>
 <style>
+  :root { --bg: #fafafa; --shadow: rgba(63,69,81,0.16); }
   body {
     font-family: Arial, sans-serif;
-    text-align: center;
     margin: 20px;
+    text-align: center;
     user-select: none;
     overscroll-behavior: contain;
   }
@@ -16,209 +17,271 @@
   .svg-wrapper {
     width: 100%;
     max-width: 1400px;
-    height: 90vh; /* use viewport height for responsiveness */
+    height: 90vh;
     margin: 20px auto;
     border: 1px solid #ccc;
     border-radius: 8px;
-    overflow: scroll;
-    background-color: #fafafa;
-    box-shadow: 0 2px 8px rgba(63,69,81,0.16);
-    cursor: grab;
+    overflow: auto; /* show scrollbars */
+    background: var(--bg);
+    box-shadow: 0 2px 8px var(--shadow);
     position: relative;
-    touch-action: none; /* allow custom gestures */
+    cursor: grab;
+    touch-action: none; /* we'll handle gestures via pointer events */
   }
-
-  .svg-wrapper:active {
-    cursor: grabbing;
-  }
+  .svg-wrapper:active { cursor: grabbing; }
 
   .svg-inner {
-    transform-origin: top left;
-    transition: transform 0.1s ease;
+    transform-origin: 0 0; /* top-left math is easier */
+    transition: transform 0.08s linear;
     display: inline-block;
+    position: relative;
   }
 
-  .zoom-controls {
+  object.svg-object {
+    display: block;
+    pointer-events: none; /* allow overlay to capture all pointer events */
+    user-select: none;
+  }
+
+  /* invisible overlay that captures pointer events for pan/pinch */
+  .interaction-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    background: transparent;
+  }
+
+  .controls {
     margin: 10px 0;
   }
-
   .zoom-button {
     background: #0073e6;
-    color: white;
-    border: none;
+    color: #fff;
+    border: 0;
     padding: 8px 12px;
-    margin: 0 5px;
-    border-radius: 4px;
+    margin: 0 6px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
   }
-
-  .zoom-button:hover {
-    background: #005bb5;
-  }
+  .zoom-button:active { transform: translateY(1px); }
+  #zoomLevel { font-weight: 600; margin-left: 8px; }
 </style>
 </head>
 <body>
   <h1>Udm Onboarding Flowchart</h1>
 
-  <div class="zoom-controls">
+  <div class="controls">
     <button class="zoom-button" id="zoomIn">+</button>
     <button class="zoom-button" id="zoomOut">−</button>
     <span id="zoomLevel">100%</span>
   </div>
 
-  <div class="svg-wrapper" id="svgWrapper">
-    <div class="svg-inner" id="svgInner">
-      <object id="svgObject" data="UdmOnboardingFlowchart.svg" type="image/svg+xml"></object>
+  <div class="svg-wrapper" id="wrapper">
+    <div class="svg-inner" id="inner">
+      <!-- use your file name here -->
+      <object id="svgObject" class="svg-object" data="UdmOnboardingFlowchart.svg" type="image/svg+xml"></object>
     </div>
+
+    <!-- overlay captures pointer events (mouse/touch) -->
+    <div class="interaction-layer" id="layer" aria-hidden="true"></div>
   </div>
 
-  <script>
-    const wrapper = document.getElementById('svgWrapper');
-    const inner = document.getElementById('svgInner');
-    const zoomText = document.getElementById('zoomLevel');
-    const svgObject = document.getElementById('svgObject');
+<script>
+(function () {
+  const wrapper = document.getElementById('wrapper');
+  const inner = document.getElementById('inner');
+  const obj = document.getElementById('svgObject');
+  const layer = document.getElementById('layer');
+  const zoomLevelEl = document.getElementById('zoomLevel');
+  const ZOOM_MIN = 0.1;
+  const ZOOM_MAX = 10;
 
-    let scale = 1;
-    let isDragging = false;
-    let startX = 0;
-    let startY = 0;
-    let scrollLeft = 0;
-    let scrollTop = 0;
+  let scale = 1;
+  let svgNatural = { width: 0, height: 0 }; // actual SVG viewBox size (px)
+  let pointers = new Map(); // pointerId -> {x,y}
+  let lastPinchDistance = 0;
+  let lastPinchCenter = null;
+  let isPanning = false;
+  let panStart = { x: 0, y: 0 };
+  let scrollStart = { left: 0, top: 0 };
 
-    function updateZoom() {
-      inner.style.transform = `scale(${scale})`;
-      zoomText.textContent = `${Math.round(scale * 100)}%`;
-    }
+  function setTransform() {
+    inner.style.transform = `scale(${scale})`;
+    zoomLevelEl.textContent = `${Math.round(scale * 100)}%`;
+  }
 
-    function zoomAt(factor, x, y) {
-      const newScale = Math.min(Math.max(scale * factor, 0.1), 10);
-      const ratio = newScale / scale;
-      scale = newScale;
+  // Zoom at focal point (wrapper-space coordinates)
+  function zoomAt(factor, focalX, focalY) {
+    const newScale = Math.min(Math.max(scale * factor, ZOOM_MIN), ZOOM_MAX);
+    const ratio = newScale / scale;
+    scale = newScale;
 
-      wrapper.scrollLeft = x * ratio - (x - wrapper.scrollLeft);
-      wrapper.scrollTop = y * ratio - (y - wrapper.scrollTop);
-      updateZoom();
-    }
+    // adjust scroll so focal point remains under pointer
+    wrapper.scrollLeft = focalX * ratio - (focalX - wrapper.scrollLeft);
+    wrapper.scrollTop  = focalY * ratio - (focalY - wrapper.scrollTop);
 
-    function zoomAtCenter(factor) {
+    setTransform();
+  }
+
+  function zoomAtCenter(factor) {
+    const rect = wrapper.getBoundingClientRect();
+    const cx = rect.width / 2 + wrapper.scrollLeft;
+    const cy = rect.height / 2 + wrapper.scrollTop;
+    zoomAt(factor, cx, cy);
+  }
+
+  // buttons
+  document.getElementById('zoomIn').addEventListener('click', () => zoomAtCenter(1.1));
+  document.getElementById('zoomOut').addEventListener('click', () => zoomAtCenter(1/1.1));
+
+  // Ctrl/Cmd + wheel zoom
+  wrapper.addEventListener('wheel', (ev) => {
+    if (ev.ctrlKey || ev.metaKey) {
+      ev.preventDefault();
       const rect = wrapper.getBoundingClientRect();
-      const centerX = rect.width / 2 + wrapper.scrollLeft;
-      const centerY = rect.height / 2 + wrapper.scrollTop;
-      zoomAt(factor, centerX, centerY);
+      const mx = ev.clientX - rect.left + wrapper.scrollLeft;
+      const my = ev.clientY - rect.top + wrapper.scrollTop;
+      const factor = ev.deltaY < 0 ? 1.1 : 1/1.1;
+      zoomAt(factor, mx, my);
     }
+  }, { passive: false });
 
-    document.getElementById('zoomIn').addEventListener('click', () => zoomAtCenter(1.1));
-    document.getElementById('zoomOut').addEventListener('click', () => zoomAtCenter(1 / 1.1));
+  // Pointer events on overlay — unified mouse & touch handling, supports multi-touch
+  layer.addEventListener('pointerdown', (ev) => {
+    layer.setPointerCapture(ev.pointerId);
+    pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
 
-    // Ctrl/Cmd + scroll to zoom
-    wrapper.addEventListener('wheel', (e) => {
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
-        const rect = wrapper.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left + wrapper.scrollLeft;
-        const mouseY = e.clientY - rect.top + wrapper.scrollTop;
-        zoomAt(factor, mouseX, mouseY);
-      }
-    });
-
-    // Desktop drag to pan
-    wrapper.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      startX = e.pageX;
-      startY = e.pageY;
-      scrollLeft = wrapper.scrollLeft;
-      scrollTop = wrapper.scrollTop;
-      wrapper.style.cursor = 'grabbing';
-    });
-
-    wrapper.addEventListener('mouseup', () => { isDragging = false; wrapper.style.cursor = 'grab'; });
-    wrapper.addEventListener('mouseleave', () => { isDragging = false; wrapper.style.cursor = 'grab'; });
-    wrapper.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      e.preventDefault();
-      const dx = e.pageX - startX;
-      const dy = e.pageY - startY;
-      wrapper.scrollLeft = scrollLeft - dx;
-      wrapper.scrollTop = scrollTop - dy;
-    });
-
-    // Touch gestures (pan + pinch-to-zoom)
-    let lastTouchDistance = 0;
-    let lastCenter = null;
-
-    wrapper.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        isDragging = true;
-        startX = e.touches[0].pageX;
-        startY = e.touches[0].pageY;
-        scrollLeft = wrapper.scrollLeft;
-        scrollTop = wrapper.scrollTop;
-      } else if (e.touches.length === 2) {
-        lastTouchDistance = getTouchDistance(e.touches);
-        lastCenter = getTouchCenter(e.touches);
-      }
-    });
-
-    wrapper.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 1 && isDragging) {
-        e.preventDefault();
-        const dx = e.touches[0].pageX - startX;
-        const dy = e.touches[0].pageY - startY;
-        wrapper.scrollLeft = scrollLeft - dx;
-        wrapper.scrollTop = scrollTop - dy;
-      } else if (e.touches.length === 2) {
-        e.preventDefault();
-        const newDistance = getTouchDistance(e.touches);
-        const factor = newDistance / lastTouchDistance;
-        const newCenter = getTouchCenter(e.touches);
-        zoomAt(factor, newCenter.x + wrapper.scrollLeft, newCenter.y + wrapper.scrollTop);
-        lastTouchDistance = newDistance;
-        lastCenter = newCenter;
-      }
-    });
-
-    wrapper.addEventListener('touchend', () => {
-      isDragging = false;
-      lastTouchDistance = 0;
-      lastCenter = null;
-    });
-
-    function getTouchDistance(touches) {
-      const dx = touches[0].clientX - touches[1].clientX;
-      const dy = touches[0].clientY - touches[1].clientY;
-      return Math.sqrt(dx * dx + dy * dy);
+    if (pointers.size === 1) {
+      // start pan
+      isPanning = true;
+      panStart = { x: ev.clientX, y: ev.clientY };
+      scrollStart = { left: wrapper.scrollLeft, top: wrapper.scrollTop };
+    } else if (pointers.size === 2) {
+      // start pinch
+      const pts = Array.from(pointers.values());
+      lastPinchDistance = distanceBetweenPoints(pts[0], pts[1]);
+      lastPinchCenter = midpoint(pts[0], pts[1]);
     }
+  });
 
-    function getTouchCenter(touches) {
-      return {
-        x: (touches[0].clientX + touches[1].clientX) / 2 - wrapper.getBoundingClientRect().left,
-        y: (touches[0].clientY + touches[1].clientY) / 2 - wrapper.getBoundingClientRect().top
-      };
-    }
+  layer.addEventListener('pointermove', (ev) => {
+    if (!pointers.has(ev.pointerId)) return;
+    // update pointer position
+    pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
 
-    // Auto-fit the SVG to screen width
-    svgObject.addEventListener('load', () => {
-      const svg = svgObject.contentDocument.querySelector('svg');
-      if (svg) {
-        const vb = svg.viewBox.baseVal;
-        if (vb && vb.width && vb.height) {
-          const scaleX = wrapper.clientWidth / vb.width;
-          const scaleY = wrapper.clientHeight / vb.height;
-          scale = Math.min(scaleX, scaleY); // fit within container
-          updateZoom();
-          wrapper.scrollLeft = 0; // align top-right
-          wrapper.scrollTop = 0;
-        } else {
-          // fallback scale
-          scale = 1;
-          updateZoom();
-        }
+    if (pointers.size === 1 && isPanning) {
+      // single-pointer pan (mouse drag or single touch)
+      const dx = ev.clientX - panStart.x;
+      const dy = ev.clientY - panStart.y;
+      wrapper.scrollLeft = scrollStart.left - dx;
+      wrapper.scrollTop  = scrollStart.top - dy;
+    } else if (pointers.size >= 2) {
+      // multi-touch pinch: compute new distance and center
+      const pts = Array.from(pointers.values());
+      const a = pts[0], b = pts[1];
+      const dist = distanceBetweenPoints(a, b);
+      if (lastPinchDistance === 0) {
+        lastPinchDistance = dist;
+        lastPinchCenter = midpoint(a, b);
+        return;
       }
-    });
+      const factor = dist / lastPinchDistance;
+      const rect = wrapper.getBoundingClientRect();
+      const center = midpoint(a, b);
+      const focalX = center.x - rect.left + wrapper.scrollLeft;
+      const focalY = center.y - rect.top + wrapper.scrollTop;
+      zoomAt(factor, focalX, focalY);
+      lastPinchDistance = dist;
+      lastPinchCenter = center;
+    }
+  });
 
-    updateZoom();
-  </script>
+  layer.addEventListener('pointerup', (ev) => {
+    layer.releasePointerCapture(ev.pointerId);
+    pointers.delete(ev.pointerId);
+    if (pointers.size < 2) {
+      lastPinchDistance = 0;
+      lastPinchCenter = null;
+    }
+    if (pointers.size === 0) {
+      isPanning = false;
+    } else if (pointers.size === 1) {
+      // if one pointer remains, reset pan baseline
+      const remaining = Array.from(pointers.values())[0];
+      panStart = { x: remaining.x, y: remaining.y };
+      scrollStart = { left: wrapper.scrollLeft, top: wrapper.scrollTop };
+      isPanning = true;
+    }
+  });
+
+  layer.addEventListener('pointercancel', (ev) => {
+    layer.releasePointerCapture(ev.pointerId);
+    pointers.delete(ev.pointerId);
+    isPanning = false;
+    lastPinchDistance = 0;
+  });
+
+  // helper math
+  function distanceBetweenPoints(p1, p2) {
+    const dx = p1.x - p2.x, dy = p1.y - p2.y;
+    return Math.hypot(dx, dy);
+  }
+  function midpoint(p1, p2) {
+    return { x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2 };
+  }
+
+  // When SVG loads, read its viewBox to size the object & inner wrapper so scaling/scroll extents make sense
+  obj.addEventListener('load', () => {
+    try {
+      const svg = obj.contentDocument && obj.contentDocument.querySelector('svg');
+      if (!svg) { console.warn('SVG not found inside object.'); return; }
+
+      // get viewBox or fallback to width/height attributes
+      let vb = svg.getAttribute('viewBox');
+      if (vb) {
+        const parts = vb.split(/\s+|,/).map(Number).filter(n => !isNaN(n));
+        // viewBox: minX minY width height
+        svgNatural.width  = parts[2];
+        svgNatural.height = parts[3];
+      } else {
+        // fallback to width/height attributes or bounding box
+        const wAttr = svg.getAttribute('width');
+        const hAttr = svg.getAttribute('height');
+        svgNatural.width = wAttr ? parseFloat(wAttr) : svg.clientWidth || 1000;
+        svgNatural.height = hAttr ? parseFloat(hAttr) : svg.clientHeight || 800;
+      }
+
+      // Set explicit intrinsic size on object & inner so scrollWidth/Height are predictable.
+      obj.style.width  = svgNatural.width + 'px';
+      obj.style.height = svgNatural.height + 'px';
+      inner.style.width  = svgNatural.width + 'px';
+      inner.style.height = svgNatural.height + 'px';
+
+      // Fit the SVG into the wrapper on load (fit entirely in view)
+      const scaleX = wrapper.clientWidth / svgNatural.width;
+      const scaleY = wrapper.clientHeight / svgNatural.height;
+      scale = Math.min(scaleX, scaleY, 1); // do not upscale beyond 1 initially (optional changeable)
+      setTransform();
+
+      // align top-right: set scrollLeft so the right edge is visible
+      // compute scaled content width
+      const scaledW = svgNatural.width * scale;
+      wrapper.scrollLeft = Math.max(0, scaledW - wrapper.clientWidth);
+      wrapper.scrollTop  = 0;
+    } catch (err) {
+      console.error('Error sizing SVG:', err);
+    }
+  });
+
+  // make sure pointer cursor resets if user releases outside
+  window.addEventListener('pointerup', () => {
+    if (pointers.size === 0) wrapper.style.cursor = 'grab';
+  });
+
+  // expose for debug if needed
+  window.__svgViewer = { zoomAt, setScale: (s)=>{ scale = s; setTransform(); } };
+})();
+</script>
 </body>
 </html>
